@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Arial",  sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #1D2129;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 4px;
+
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            background-color: #3b82f6;
+            min-width: 120px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-danger {
+            background-color: #f44545;
+        }
+
+        .btn-danger:hover {
+            background-color: #ff0000;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            min-width: 80px;
+            height: 32px;
+            font-size: 13px;
+        }
+
+        .input {
+            padding: 10px 14px;
+            border: 1px solid #E5E6EB;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+            transition: all 0.2s ease;
+            height: 40px;
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sub-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #1D2129;
+        }
+
+        .tip-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 4px;
+            color: #FFFFFF;
+            font-weight: 500;
+            z-index: 999;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .tip-success {
+            background-color: #52C41A;
+        }
+
+        .tip-error {
+            background-color: #F53F3F;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table thead {
+            background-color: #1e40af;
+            color: white;
+
+        }
+
+        .table th, .table td {
+            border: 1px solid #e6e6e6;
+            padding: 12px;
+            text-align: center;
+            font-weight: normal;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .flex-item {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #4E5969;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #86909C;
+            margin-top: 8px;
+        }
+
+        .option-list {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #4E5969;
+        }
+
+        .option-item {
+            margin: 4px 0;
+        }
+
+        .correct-option {
+            color: #4E5969;
+            font-weight: 500;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            background-color: #FFFFFF;
+            border-radius: 4px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .modal-close {
+            text-align: right;
+            margin-bottom: 16px;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 40px;
+            cursor: pointer;
+            color: #86909C;
+        }
+
+        .detail-item {
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #E5E6EB;
+        }
+
+        .detail-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .detail-content {
+            font-size: 14px;
+            color: #4E5969;
+        }
+
+        .action-btns {
+            display: inline-flex;
+            gap: 8px;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+    <div id="tipBox" class="tip-box"></div>
+
+    <main class="flex-grow container" style="padding: 24px 0;">
+        <section class="card">
+            <h2 class="title">题库与抽题管理</h2>
+            <div class="flex-row">
+                <div class="flex-item">
+                    <label for="questionBankUrl" class="label">题库文件地址</label>
+                    <input
+                        type="text"
+                        id="questionBankUrl"
+                        class="input"
+                        placeholder="例如：C:\users\admin\Project\questionBank.xlsx"
+                        value="C:\users\admin\Project\questionBank.xlsx"
+                    >
+                    <p class="hint">提示：请输入服务器可访问的题库文件绝对路径</p>
+                </div>
+
+                <div class="flex-item">
+                    <label for="questionCount" class="label">抽题数量</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input
+                            type="number"
+                            id="questionCount"
+                            class="input"
+                            placeholder="请输入要抽取的题目数量"
+                            min="1"
+                            value="10"
+                        >
+                        <button id="randomDrawBtn" class="btn">随机抽题</button>
+                    </div>
+                    <p class="hint">提示：抽题数量不能超过题库总题数</p>
+                </div>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <h3 class="sub-title">抽取的题目（可设置每题分数）</h3>
+                <div >
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">序号</th>
+                                <th style="width: 60px;">题号</th>
+                                <th style="width: 60px;">题目类型</th>
+                                <th style="flex: 1;">题目内容</th>
+                                <th style="width: 300px;">选项</th>
+                                <th style="width: 200px;">正确选项</th>
+                                <th style="width: 100px;">题目分数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="questionList">
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 16px; text-align: right;">
+                    <button id="saveQuestionScoreBtn" class="btn" style="display: none;">保存所有题目分数</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="title">选手答题状态管理</h2>
+            <div style="margin-bottom: 16px;">
+                <button id="getPlayerStatusBtn" class="btn">获取所有选手答题状态</button>
+            </div>
+            <div >
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">排名</th>
+                            <th style="width: 120px;">选手姓名</th>
+                            <th style="width: 120px;">答题进度</th>
+                            <th style="width: 120px;">准确率</th>
+                            <th style="width: 120px;">得分情况</th>
+                            <th style="width: 100px;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playerList">
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2 class="title">答题日志下载</h2>
+            <div style="margin-top: 16px;">
+                <button id="downloadLogBtn" class="btn">下载答题日志文件</button>
+                <p class="hint" style="margin-top: 8px;">提示：下载的日志文件格式为CSV，可使用Excel打开查看详细内容</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- 选手答题详情弹窗 -->
+    <div id="playerDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-close">
+                <button id="closeModalBtn" class="modal-close-btn">×</button>
+            </div>
+            <h2 class="title" style="margin-bottom: 24px;" id="modalPlayerName">选手答题详情</h2>
+            <div id="playerDetailContent">
+                <!-- 动态渲染选手答题详情 -->
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        let currentQuestions = [];
+        let currentPlayers = [];
+
+        // 提示框
+        function showTip(message, type = 'success') {
+            const tipBox = document.getElementById('tipBox');
+            tipBox.className = 'tip-box';
+            tipBox.classList.add(`tip-${type}`);
+
+            tipBox.textContent = message;
+            tipBox.style.display = 'block';
+
+            setTimeout(() => {
+                tipBox.style.display = 'none';
+            }, 3000);
+        }
+
+
+        // 随机抽题并展示
+        document.getElementById('randomDrawBtn').addEventListener('click', async function() {
+            const questionCount = parseInt(document.getElementById('questionCount').value);
+            const bankUrl = document.getElementById('questionBankUrl').value.trim();
+
+            if (!bankUrl) {
+                showTip('请输入有效的题库文件地址', 'error');
+                return;
+            }
+            if (isNaN(questionCount) || questionCount < 1 ) {
+                showTip('抽题数量必须是大于1的整数', 'error');
+                return;
+            }
+
+            console.log('发送到服务器的参数：', {
+                bankUrl: bankUrl,
+                questionCount: questionCount
+            });
+            try {
+                const response = await fetch('/load_questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        bankUrl: bankUrl,
+                        questionCount: questionCount
+                    })
+            })
+                if (!response.ok) {
+                    throw new Error('操作失败，Network response was not ok');
+                }
+                const result=await response.json();
+
+                if(! result['success']){
+
+                    throw new Error(result['message']);
+                }
+                else{
+                    currentQuestions=result['questions'];
+                }
+
+            } catch (error) {
+                console.error('失败:', error);
+                showTip('失败：' + error.message, 'error')
+                return { success: false, message: error.message };
+            }
+
+
+            renderQuestionList();
+            document.getElementById('saveQuestionScoreBtn').style.display = 'inline-block';
+            showTip(`成功抽取 ${questionCount} 道题目`, 'success');
+        });
+
+        // 渲染题目列表
+        function renderQuestionList() {
+            const questionList = document.getElementById('questionList');
+            if (currentQuestions.length === 0) {
+                questionList.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 32px; color: #86909C;">
+                            请先配置题库地址并进行随机抽题
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            let questionIndex=0
+            currentQuestions.forEach(question => {
+                questionIndex+=1
+             // 选项+,
+                const optionHtml = question.options.map(option => {
+                    return `<div class="option-item">${option}</div>`;
+                }).join('');
+                let correctAnswerHtml=''
+                if (Array.isArray(question.correctAnswer)) {
+                    correctAnswerHtml = question.correctAnswer.map(answer => {
+                    return `<div class="option-item">${answer}</div>`;
+                    }).join('');}
+                else{
+                    correctAnswerHtml = `<div class="option-item">${question.correctAnswer}</div>`;
+                    }
+
+
+                html += `
+                    <tr>
+                        <td>${questionIndex}</td>
+                        <td>${question.id}</td>
+                        <td>${question.type==='single'?'单选':question.type==='multiple'?'多选':'判断'}</td>
+                        <td style="color: #4E5969;">${question.question}</td>
+                        <td>
+                            <div class="option-list">${optionHtml}</div>
+                        </td>
+                        <td>
+                            <div class="option-list">${correctAnswerHtml}</div>
+                        </td>
+                        <td>
+                            <input
+                                type="number"
+                                class="input question-score"
+                                data-question-id="${question.id}"
+                                value="${question.score}"
+                                min="1"
+                                max="100"
+                                style="width: 80px;"
+                            >
+                        </td>
+                    </tr>
+                `;
+            });
+            questionList.innerHTML = html;
+
+            // 分数输入
+            document.querySelectorAll('.question-score').forEach(input => {
+                input.addEventListener('change', function() {
+                    const questionId = this.getAttribute('data-question-id');
+                    const newScore = parseInt(this.value);
+                    if (isNaN(newScore) || newScore < 1 || newScore > 100) {
+                        showTip('题目分数必须在1-100之间', 'error');
+                        this.value = 10;
+                        return;
+                    }
+
+                    // 更新分数
+                    currentQuestions.forEach(question => {
+                        if (question.id === questionId) {
+                            question.score = newScore;
+                            question.isEdited = true;
+                        }
+                    });
+                });
+            });
+        }
+
+        // 保存分数
+        document.getElementById('saveQuestionScoreBtn').addEventListener('click', async function() {
+            if (currentQuestions.length === 0) {
+                showTip('暂无题目分数可保存', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/save_questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        currentQuestions
+                    })
+
+            })
+                if (!response.ok) {
+                    throw new Error('操作失败，Network response was not ok');
+                }
+                const result=await response.json();
+                if(! result['success']){
+
+                    throw new Error(result['message']);
+                }
+                else{
+                    showTip('保存题目成功') ;
+                }
+
+            } catch (error) {
+                console.error('失败:', error);
+                showTip('发送失败：' + error.message, 'error')
+            }
+        });
+
+        // 获取所有选手答题状态
+        document.getElementById('getPlayerStatusBtn').addEventListener('click', refreshPlayerList)
+        async function refreshPlayerList () {
+
+            try {
+
+                const response = await fetch('./get_player_data', {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('获取选手数据失败，Network response was not ok');
+                }
+                currentPlayers = await response.json();
+
+
+            // 按分数排序
+                currentPlayers.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+                    return b.accuracy - a.accuracy;
+                })
+            } catch (error) {
+                console.error('获取选手数据失败：', error);
+                return [];
+            }
+
+            renderPlayerList();
+            showTip(`成功获取 ${currentPlayers.length} 名选手的答题状态`, 'success');
+        }
+
+        // 渲染选手列表
+        function renderPlayerList() {
+            const playerList = document.getElementById('playerList');
+            if (currentPlayers.length === 0) {
+                playerList.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 32px; color: #86909C;">
+                            请点击"获取所有选手答题状态"加载数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            currentPlayers.forEach((player,rank) => {
+
+
+                    const answered = player.answers.filter(item => item === true || item ===false).length;
+                    const totalQuestion = player.answers.length;
+
+                    const progress=`${answered}/${totalQuestion}`;
+
+                html += `
+                    <tr>
+                        <td style="font-weight: 500;">${rank+1}</td>
+                        <td style="font-weight: 500;">${player.name}</td>
+                        <td style="font-size: 14px;">${progress}</td>
+                        <td>${(player.accuracy* 100).toFixed(2)}</td>
+                        <td>${player.score}</td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn btn-sm view-detail-btn" data-player-name="${player.name}">查看详情</button>
+                                <button class="btn btn-sm btn-danger delete-player-btn" data-player-name="${player.name}">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            playerList.innerHTML = html;
+
+
+            // 查看详细答题情况
+            document.querySelectorAll('.view-detail-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const playerName = this.getAttribute('data-player-name');
+                    showPlayerDetail(playerName);
+                });
+            });
+
+            // 删除选手按钮
+            document.querySelectorAll('.delete-player-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const playerName = this.getAttribute('data-player-name');
+                    deletePlayer(playerName);
+                });
+            });
+        }
+
+        // 删除选手函数
+        async function deletePlayer(playerName) {
+            if (!confirm('确定要删除该选手吗？此操作不可恢复！')) {
+                return;
+            }
+            try {
+
+                const response = await fetch(`./delete/${playerName}`, {
+                    method: 'DELETE',
+                });
+                if (!response.ok) {
+                        throw new Error('失败，Network response was not ok');
+                    }
+                let result= await response.json();
+                if (! result['success']) {
+                    throw new Error(result['message']);
+                }
+            await refreshPlayerList();
+            showTip('选手删除成功', 'success')
+
+            } catch (error) {
+                showTip('删除失败：' + error.message, 'error');
+            }
+
+
+        }
+        //获取选手答题详情
+        async function getPlayerAnswersFromServer(playerName) {
+            try {
+
+                const response = await fetch(`./admin_get_answers/${playerName}`, {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+
+                if (!response.ok) {
+                        throw new Error('失败，Network response was not ok');
+                    }
+                return await response.json();
+
+
+            } catch (error) {
+                console.error('获取答案失败:', error);
+                showTip('获取答案失败：' + error.message, 'error');
+            }
+        }
+        // 显示选手答题详情
+        async function showPlayerDetail(playerName) {
+            const player = currentPlayers.find(p => p.name === playerName);
+            if (!player) return;
+
+            const answers = await getPlayerAnswersFromServer(playerName);
+            const modal = document.getElementById('playerDetailModal');
+            const modalPlayerName = document.getElementById('modalPlayerName');
+            const playerDetailContent = document.getElementById('playerDetailContent');
+
+            // 设置弹窗标题
+            modalPlayerName.textContent = `${player.name} - 答题详情`;
+
+            // 详细答题内容
+            let detailHtml = '';
+            answers.forEach(answer => {
+                detailHtml += `
+                    <div class="detail-item">
+                        <div class="detail-title">第${answer.questionIndex+1}题</div>
+                        <div class="detail-content">${answer.question}</div>
+                        <div style="margin-top: 8px; font-size: 14px;">
+                            <div style="margin: 4px 0;"><strong>正确选项：</strong><span class="correct-option">${answer.correctAnswer}</span></div>
+                            <div style="margin: 4px 0;"><strong>选手选项：</strong><span class="correct-option">${answer.playerAnswer}</span></div>
+                            <div class="correct-option">${answer.isCorrect ? '✓ 回答正确' : '✗ 回答错误'}</div>
+                            <div style="margin: 4px 0;"><strong>本题得分：</strong>${answer.score}分</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            playerDetailContent.innerHTML = detailHtml;
+            // 显示弹窗
+            modal.style.display = 'flex';
+        }
+
+        // 关闭弹窗
+        document.getElementById('closeModalBtn').addEventListener('click', function() {
+            document.getElementById('playerDetailModal').style.display = 'none';
+        });
+
+
+        // 下载答题日志
+        document.getElementById('downloadLogBtn').addEventListener('click', async function() {
+            try {
+
+                const response = await fetch(`./save_log`, {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log(response);
+                if (!response.ok) {
+                        throw new Error('失败，Network response was not ok');
+                    }
+                const result = await response.json();
+                if (! result['success']) {
+                    throw new Error(result['message']);
+                }
+                showTip(`成功下载答题日志文件`, 'success');
+            } catch (error) {
+                console.error('下载答题日志文件失败:', error);
+                showTip('下载答题日志文件失败：' + error.message, 'error');
+            }
+
+        });
+    </script>
+</body>
+</html>
