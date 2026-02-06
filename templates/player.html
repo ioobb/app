@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答题系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+
+            line-height: 1.6;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #1e40af;
+            color: #fff;
+            padding: 15px 0;
+            text-align: center;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 20px;
+            border: none;
+            background-color: #3b82f6;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #2563eb;
+        }
+
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+
+        #welcome-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        #welcome-section h2 {
+            margin-bottom: 20px;
+            font-size: 28px;
+            color: #1e40af;
+        }
+
+        .login-form {
+            margin: 20px 0;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #1e40af;
+        }
+
+        .input-group input {
+            padding: 12px;
+            width: 300px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .login-status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .login-status.success {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            display: block;
+        }
+
+        .login-status.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            display: block;
+        }
+
+        .login-status p {
+            margin: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #quiz-section {
+            display: none;
+        }
+
+        .progress {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #1e40af;
+            font-weight: bold;
+        }
+
+        .question-card {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .option:hover {
+            background-color: #f8fafc;
+        }
+
+        .option.selected {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #result-section {
+            display: none;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .result-header h2 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .answer-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .answer-item:last-child {
+            border-bottom: none;
+        }
+
+        .answer-question {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .answer-correct {
+            color: green;
+            font-weight: bold;
+        }
+
+        .answer-incorrect {
+            color: red;
+            font-weight: bold;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>答题竞赛</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <section id="welcome-section">
+            <h2>欢迎参赛</h2>
+            <p>请输入您的姓名，然后点击确认按钮(首尾空格会被自动过滤)</p>
+
+            <div class="login-form">
+                <div class="input-group">
+                    <input type="text" id="name-input" placeholder="请输入您的姓名" required>
+                </div>
+
+                <div class="login-status" id="login-status">
+                    <p id="login-status-message"></p>
+                </div>
+
+                <button id="confirm-name-btn" style="padding: 12px 30px; margin-right: 10px;">确认</button>
+                <button id="start-quiz-btn" style="padding: 12px 30px;" class="hidden">开始答题</button>
+            </div>
+        </section>
+
+        <section id="quiz-section">
+            <div class="progress">
+                <p>参赛者: <span id="player-name">未命名</span> | 题目 <span id="current-question">1</span>/<span id="total-questions">10</span> | 用时: <span id="quiz-timer">00:00</span></p>
+            </div>
+
+            <div class="question-card">
+                <div id="question-container">
+                    <!-- 题目内容将通过JavaScript插入 -->
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button id="next-btn">下一题</button>
+            </div>
+        </section>
+
+        <section id="result-section">
+            <div class="result-header">
+                <h2>答题完成</h2>
+                <p>参赛者: <span id="result-player-name"></span> | 用时: <span id="result-time-spent"></span></p>
+            </div>
+
+            <div id="answers-container" style="display: none;">
+                <!-- 答题详情将通过JavaScript动态插入 -->
+            </div>
+
+
+        </section>
+    </div>
+
+    <script>
+        let currentQuestionIndex = 0;
+        let playerAnswers = [];
+        let question = {};
+        let startTime = null;
+        let timerInterval = null;
+        let playerId = null;
+        let playerName = '';
+        let totalQuestions = 0;
+
+        const welcomeSection = document.getElementById('welcome-section');
+        const quizSection = document.getElementById('quiz-section');
+        const resultSection = document.getElementById('result-section');
+        const questionContainer = document.getElementById('question-container');
+        const answersContainer = document.getElementById('answers-container');
+        const currentQuestionSpan = document.getElementById('current-question');
+        const totalQuestionsSpan = document.getElementById('total-questions');
+        const quizTimerSpan = document.getElementById('quiz-timer');
+        const playerNameSpan = document.getElementById('player-name');
+        const resultPlayerNameSpan = document.getElementById('result-player-name');
+        const resultTimeSpentSpan = document.getElementById('result-time-spent');
+        const nameInput = document.getElementById('name-input');
+        const nextBtn = document.getElementById('next-btn');
+        const confirmNameBtn = document.getElementById('confirm-name-btn');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const loginStatus = document.getElementById('login-status');
+        const loginStatusMessage = document.getElementById('login-status-message');
+
+        function init() {
+            confirmNameBtn.addEventListener('click', confirmPlayerName);
+            startQuizBtn.addEventListener('click', startQuiz);
+            nextBtn.addEventListener('click', goToNextQuestion);
+
+            nameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmPlayerName();
+                }
+            });
+        }
+
+        async function confirmPlayerName() {
+            const inputName = nameInput.value.trim();
+
+            if (!inputName) {
+                showLoginStatus('请输入您的姓名', 'error');
+                return;
+            }
+
+            // 显示加载状态
+            showLoginStatus('正在验证...', 'success');
+            confirmNameBtn.disabled = true;
+
+            try {
+                const response = await loginPlayer(inputName);
+
+                if (response.success) {
+                    playerId = response.playerId;
+                    playerName = response.playerName;
+                    totalQuestions = response.totalQuestions;
+                    showLoginStatus(`登录成功！欢迎您，${playerName}`, 'success');
+
+                    confirmNameBtn.classList.add('hidden');
+                    startQuizBtn.classList.remove('hidden');
+                    nameInput.disabled = true;
+
+                } else {
+                    showLoginStatus(response.message || '登录失败，请重试', 'error');
+                }
+            } catch (error) {
+                showLoginStatus('网络错误，请检查网络连接后重试', 'error');
+                console.error('登录失败:', error);
+            } finally {
+                confirmNameBtn.disabled = false;
+            }
+        }
+
+        async function loginPlayer(playerName) {
+
+            const data = {
+                playerName: playerName.trim(),
+            };
+
+            try {
+                const response = await fetch('./login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    throw new Error('登录失败，Network response was not ok');
+                }
+                const result=await response.json();
+                if(result['success']){
+
+                    return result;
+                }
+                else{
+                    throw new Error(result['message']);
+                }
+
+            } catch (error) {
+                console.error('失败:', error);
+                return { success: false, message: error.message };
+            }
+        }
+
+
+
+        // 显示登录状态消息
+        function showLoginStatus(message, type) {
+            loginStatusMessage.textContent = message;
+            loginStatus.className = 'login-status ' + type;
+        }
+
+        // 开始答题
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            playerAnswers = new Array(totalQuestions).fill(null);
+
+            totalQuestionsSpan.textContent = totalQuestions;
+            playerNameSpan.textContent = playerName;
+            resultPlayerNameSpan.textContent = playerName;
+
+            welcomeSection.style.display = 'none';
+            quizSection.style.display = 'block';
+
+            loadQuestion(currentQuestionIndex);
+
+            startTime = new Date();
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        async function getQuestion() {
+
+            try {
+                const response = await fetch('./getQuestion', {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                if (!response.ok) {
+                    throw new Error('获取问题失败，Network response was not ok');
+                }
+                const result=await response.json();
+
+                if(result['success']){
+                    question=await result['question'];
+                    currentQuestionIndex=await result['currentQuestionIndex'];
+                }
+                else{
+                    throw new Error(result['message']);
+                }
+
+            } catch (error) {
+                alert("获取问题失败！");
+                console.error('失败:', error);
+            }
+        }
+        // 加载题目
+        async function loadQuestion(index) {
+            if (index < 0 || index >= totalQuestions) return;
+
+            await getQuestion();
+            let html = '';
+
+            // 题目
+            html += `<div class="question-text">${question.question}</div>`;
+            html += '<div class="options">';
+
+            // 选项
+            console.log(question);
+            question.options.forEach((option) => {
+                const isChecked = playerAnswers[index] &&
+                                 ((question.type === 'multiple' && playerAnswers[index].includes(option)) ||
+                                  (question.type !== 'multiple' && playerAnswers[index] === option));
+
+                html += `
+                    <div class="option ${isChecked ? 'selected' : ''}" data-value="${option}">
+                        ${option}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            questionContainer.innerHTML = html;
+
+            // 点击选项
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', () => {
+                    const optionValue = option.dataset.value;
+
+                    if (question.type === 'multiple') {
+                        let selectedOptions = playerAnswers[index] || [];
+
+                        if (selectedOptions.includes(optionValue)) {
+                            selectedOptions = selectedOptions.filter(val => val !== optionValue);
+                        } else {
+                            selectedOptions.push(optionValue);
+                        }
+
+                        playerAnswers[index] = selectedOptions;
+
+                        options.forEach(opt => {
+                            if (selectedOptions.includes(opt.dataset.value)) {
+                                opt.classList.add('selected');
+                            } else {
+                                opt.classList.remove('selected');
+                            }
+                        });
+                    } else {
+                        playerAnswers[index] = optionValue;
+
+                        options.forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        option.classList.add('selected');
+                    }
+                });
+            });
+
+            currentQuestionSpan.textContent = index + 1;
+            nextBtn.textContent = index === totalQuestions - 1 ? '完成答题' : '下一题';
+        }
+
+        // 下一题
+        async function goToNextQuestion() {
+            // 保存当前题目的答案到服务器
+            if (currentQuestionIndex < totalQuestions) {
+                await saveAnswerToServer(currentQuestionIndex, playerAnswers[currentQuestionIndex]);
+            }
+
+            if (currentQuestionIndex < totalQuestions - 1) {
+                currentQuestionIndex++;
+                await loadQuestion(currentQuestionIndex);
+            } else {
+                await showResults();
+            }
+        }
+
+        // 保存答案到服务器
+        async function saveAnswerToServer(questionIndex, answer) {
+
+            const data = {
+                questionId: question.id,
+                questionIndex: questionIndex,
+                answer: answer,
+            };
+
+            try {
+                const response = await fetch('./save-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                if (!response.ok) {
+                    throw new Error('保存答案失败，Network response was not ok');
+                    }
+                let success=await response.json().then(success=>success['success']);
+                if (success) {
+                    console.log('答案已保存到服务器:');
+                    return { success: true };
+                }
+                else {
+                    throw new Error('保存答案失败，服务器未保存答案');
+                    }
+            } catch (error) {
+                console.error('保存答案失败:', error);
+                alert("保存答案失败！");
+                return { success: false, error: error.message };
+            }
+        }
+
+        // 获取用户答案和正确答案
+        async function getPlayerAnswersFromServer() {
+            try {
+                const response = await fetch(`./get-answers`, {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                        throw new Error('失败，Network response was not ok');
+                    }
+                const playerData=await response.json()
+                return playerData['player'];
+            } catch (error) {
+                console.error('获取答案失败:', error);
+                throw error;
+            }
+        }
+
+        // 显示结果
+        async function showResults() {
+            // 停止计时
+            clearInterval(timerInterval);
+
+            quizSection.style.display = 'none';
+            resultSection.style.display = 'block';
+            answersContainer.style.display = 'block';
+
+            try {
+                const resultData = await getPlayerAnswersFromServer();
+                // 更新用时，从服务器
+                resultTimeSpentSpan.textContent = resultData['timerInterval'];
+                // 生成答题详情
+                let html = '';
+                let correctCount = 0;
+                let scoreCounter = 0;
+                resultData.answers.forEach((item, index) => {
+                    const question = item.question;
+                    const isCorrect = item.isCorrect;
+                    console.log(question,isCorrect);
+                    if (isCorrect) {
+                        correctCount++;
+                        scoreCounter+=item.score
+                    }
+
+                    html += `
+                        <div class="answer-item">
+                            <div class="answer-question">第 ${index + 1} 题: ${question}</div>
+                            <div>
+                                <strong>您的答案:</strong> ${Array.isArray(item.playerAnswer) ? item.playerAnswer.join(', ') : (item.playerAnswer || '未作答')}
+                            </div>
+                            <div>
+                                <strong>正确答案:</strong> ${Array.isArray(item.correctAnswer) ? item.correctAnswer.join(', ') : item.correctAnswer}
+                            </div>
+                            <div>
+                                <strong>本题得分:</strong> ${item.score}分
+                            </div>
+                            <div class="${isCorrect ? 'answer-correct' : 'answer-incorrect'}">
+                                ${isCorrect ? '✓ 回答正确' : '✗ 回答错误'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 添加总分
+                html = `
+                    <div style="text-align: center; margin-bottom: 30px; padding: 20px; background-color: #f8fafc; border-radius: 4px;">
+                        <div style="font-size: 24px; font-weight: bold; color: #1e40af;">得分: ${scoreCounter}</div>
+                        <div style="margin-top: 10px;">正确题数: ${correctCount}/${totalQuestions}</div>
+                    </div>
+                ` + html;
+
+                answersContainer.innerHTML = html;
+
+            } catch (error) {
+                console.error('显示结果失败:', error);
+                answersContainer.innerHTML = `<p style="color: red;text-align: center;">加载结果失败</p>`;
+            }
+        }
+
+
+        // 更新计时器
+        function updateTimer() {
+            if (!startTime) return;
+
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now - startTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+            const seconds = (elapsedSeconds % 60).toString().padStart(2, '0');
+
+            quizTimerSpan.textContent = `${minutes}:${seconds}`;
+        }
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
