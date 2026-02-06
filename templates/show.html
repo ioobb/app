@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>答题竞赛实时排名</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .ranking-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .ranking-table th,
+        .ranking-table td {
+            border: 1px solid #e6e6e6;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .ranking-table th {
+            background-color: #1e40af;
+            color: white;
+            font-weight: normal;
+        }
+
+        .ranking-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .answer-blocks {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .answer-block {
+            width: 20px;
+            height: 20px;
+            border-radius: 2px;
+        }
+
+        .correct {
+            background-color: #67c23a;
+        }
+
+        .wrong {
+            background-color: #f56c6c;
+        }
+
+                .tip-box {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: 4px;
+            color: #FFFFFF;
+            font-weight: 500;
+            z-index: 999;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .tip-success {
+            background-color: #52C41A;
+        }
+
+        .tip-error {
+            background-color: #F53F3F;
+        }
+
+        .update-time {
+            text-align: right;
+            margin-top: 10px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div >
+        <div id="tipBox" class="tip-box"></div>
+        <h1 class="title">答题竞赛实时排名</h1>
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th>排名</th>
+                    <th>选手姓名</th>
+                    <th>答题情况</th>
+                    <th>正确率</th>
+                    <th>得分</th>
+                </tr>
+            </thead>
+            <tbody id="ranking-body">
+                <!-- 选手数据会动态渲染到这里 -->
+            </tbody>
+        </table>
+        <div class="update-time" id="update-time">最后更新：--</div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            // 定时刷新间隔
+            refreshInterval: 1000,
+            // 展示的最大选手数量
+            maxShowCount: 16
+        };
+
+        function showTip(message, type = 'success') {
+            const tipBox = document.getElementById('tipBox');
+            tipBox.className = 'tip-box';
+            tipBox.classList.add(`tip-${type}`);
+
+            tipBox.textContent = message;
+            tipBox.style.display = 'block';
+
+            setTimeout(() => {
+                tipBox.style.display = 'none';
+            }, 3000);
+        }
+
+        async function fetchPlayerData() {
+            try {
+
+                const response = await fetch('./get_player_data', {
+                    method: 'get',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('获取选手数据失败，Network response was not ok');
+                }
+                const players=await response.json();
+
+                return players.sort((a, b) => {
+                    if (b.score !== a.score) {
+                        return b.score - a.score;
+                    }
+
+                    return b.accuracy - a.accuracy;
+
+                });
+            } catch (error) {
+                console.error('获取选手数据失败：', error);
+                showTip('失败：' + error.message, 'error')
+                return [];
+            }
+        }
+
+        // 渲染选手排名表格
+        function renderRanking(players) {
+            const rankingBody = document.getElementById('ranking-body');
+            rankingBody.innerHTML = '';
+
+            const showPlayers = players.slice(0, CONFIG.maxShowCount);
+
+            showPlayers.forEach((player, rank) => {
+                const tr = document.createElement('tr');
+
+                let answerBlocksHtml = '';
+                player.answers.forEach(answer => {
+                    let className = '';
+                    if (answer === true) className = 'correct';
+                    else if (answer === false) className = 'wrong';
+
+                    answerBlocksHtml += `<div class="answer-block ${className}"></div>`;
+                });
+
+                tr.innerHTML = `
+                    <td>${rank + 1}</td>
+                    <td>${player.name}</td>
+                    <td><div class="answer-blocks">${answerBlocksHtml}</div></td>
+                    <td>${(player.accuracy* 100).toFixed(2)}%</td>
+                    <td>${player.score}</td>
+                `;
+
+                rankingBody.appendChild(tr);
+            });
+
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            document.getElementById('update-time').textContent = `最后更新：${timeStr}`;
+        }
+
+        // 初始化并定时刷新
+        async function init() {
+            const initialData = await fetchPlayerData();
+            renderRanking(initialData);
+
+            // 定时刷新数据
+            setInterval(async () => {
+                const newData = await fetchPlayerData();
+                renderRanking(newData);
+            }, CONFIG.refreshInterval);
+        }
+
+        // 启动程序
+        init();
+    </script>
+</body>
+</html>
